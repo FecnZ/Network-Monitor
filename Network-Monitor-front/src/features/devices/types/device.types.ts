@@ -1,6 +1,5 @@
-// src/types/device.ts
 export interface Port {
-  portNumber: number
+  numberPort: number
   protocol: string
   service: string
   state: string
