@@ -1,6 +1,5 @@
-
 import { useQuery } from '@tanstack/react-query'
-import { getDevices } from '../api/devices'
+import { getDevices } from '../api/devices.api'
 
 export function useDevices() {
   return useQuery({
