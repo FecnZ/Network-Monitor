@@ -1,6 +1,5 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { triggerScan } from '../api/scaner'
+import { triggerScan } from '../api/scan.api'
 
 export function useTriggerScan() {
   const queryClient = useQueryClient()
@@ -8,8 +7,6 @@ export function useTriggerScan() {
   return useMutation({
     mutationFn: triggerScan,
     onSuccess: () => {
-      // Cuando el escaneo termina, invalida la lista de dispositivos
-      // para que React Query la vuelva a pedir inmediatamente
       queryClient.invalidateQueries({ queryKey: ['devices'] })
     },
   })
