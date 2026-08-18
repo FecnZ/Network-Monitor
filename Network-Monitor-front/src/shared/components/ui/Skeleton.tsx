@@ -1,3 +1,5 @@
+import { AppColors } from '../../theme/colors'
+
 interface Props {
   className?: string
 }
@@ -5,7 +7,7 @@ interface Props {
 export function Skeleton({ className = '' }: Props) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-slate-700/50 ${className}`}
+      className={`animate-pulse rounded-lg ${AppColors.skeletonBg} ${className}`}
     />
   )
 }

@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import { useTriggerScan } from '../hooks/useTriggerScan'
 import { useScanStatus } from '../hooks/useScanStatus'
 import { Button } from '../../../shared/components/ui/Button'
+import { AppColors } from '../../../shared/theme/colors'
+import { AppText } from '../../../shared/theme/typography'
 
 export function ScanButton() {
   const scanMutation = useTriggerScan()
@@ -47,7 +49,7 @@ export function ScanButton() {
         {isScanning ? 'Escaneando…' : 'Escanear ahora'}
       </Button>
       {scanMutation.isError && (
-        <p className="mt-2 text-sm text-rose-400">
+        <p className={`mt-2 ${AppText.bodySmall} ${AppColors.error}`}>
           Error al iniciar: {(scanMutation.error as Error).message}
         </p>
       )}
