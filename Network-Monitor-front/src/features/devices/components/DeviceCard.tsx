@@ -82,7 +82,7 @@ function RenameDeviceModal({
           </button>
           <button
             onClick={handleSave}
-            className={`inline-flex items-center gap-1.5 rounded-xl ${AppColors.buttonPrimaryBg} px-4 py-2 ${AppText.caption} font-medium text-white shadow-md hover:brightness-110 transition-all`}
+            className={`inline-flex items-center gap-1.5 rounded-xl ${AppColors.buttonPrimaryBg} px-4 py-2 ${AppText.caption} font-medium ${AppColors.textOnPrimary} shadow-md hover:brightness-110 transition-all`}
           >
             <Check size={13} />
             <span>Guardar</span>
@@ -106,11 +106,10 @@ function DeviceCardItem({
 
   return (
     <div
-      className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-        device.online
+      className={`rounded-xl border transition-all duration-200 overflow-hidden ${device.online
           ? `${AppColors.successCardBorder} ${AppColors.successCardBg}`
           : `${AppColors.cardBorder} ${AppColors.cardBg}`
-      } ${open ? AppColors.primaryBorder : ''}`}
+        } ${open ? AppColors.primaryBorder : ''}`}
     >
       {/* Main card row */}
       <div className="px-4 py-3 flex items-center justify-between gap-3">
@@ -119,7 +118,7 @@ function DeviceCardItem({
           onClick={() => setOpen((v) => !v)}
         >
           {/* Status dot */}
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${device.online ? AppColors.successBg : 'bg-slate-600'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${device.online ? AppColors.successBg : 'bg-slate-400'}`} />
           <div className="min-w-0">
             <p className={`${AppText.mono} ${AppColors.primary} leading-tight`}>{device.ipAddress}</p>
             {device.friendlyName && (
@@ -131,11 +130,10 @@ function DeviceCardItem({
           <DeviceStatusBadge online={device.online} />
           <button
             onClick={() => setOpen((v) => !v)}
-            className={`p-1.5 rounded-md transition-colors ${
-              open
+            className={`p-1.5 rounded-md transition-colors ${open
                 ? `${AppColors.primary} ${AppColors.primaryBg}`
                 : `${AppColors.textSecondary} hover:${AppColors.textPrimary} ${AppColors.cardBgHover}`
-            }`}
+              }`}
             title="Detalles y opciones"
             aria-label={`Opciones de ${device.hostname || device.ipAddress}`}
           >
@@ -182,7 +180,7 @@ function DeviceCardItem({
             </button>
             <button
               onClick={() => onViewHistory(device.id, device.friendlyName || device.hostname)}
-              className={`inline-flex items-center gap-1.5 rounded-md bg-indigo-500/20 border border-indigo-500/30 px-2.5 py-1 ${AppText.caption} font-medium text-indigo-300 hover:bg-indigo-500/30 transition-colors`}
+              className={`inline-flex items-center gap-1.5 rounded-md dark:bg-indigo-500/20 border border-indigo-200 px-2.5 py-1 ${AppText.caption} font-medium dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/30 transition-colors`}
             >
               <History size={12} />
               <span>Historial</span>

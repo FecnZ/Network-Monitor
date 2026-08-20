@@ -1,28 +1,22 @@
-import { useState } from 'react'
 import { useDevices } from './hooks/useDevices'
 import { DeviceTable } from './components/DeviceTable'
 import { DeviceCardList } from './components/DeviceCard'
-import { DeviceHistoryDrawer } from './components/DeviceHistoryDrawer'
 import { ErrorBoundary } from '../../shared/components/error/ErrorBoundary'
 import { FeatureErrorFallback } from '../../shared/components/error/FeatureErrorFallback'
 import { Skeleton } from '../../shared/components/ui/Skeleton'
 import { useMediaQuery } from '../../shared/hooks/useMediaQuery'
 import { AppColors } from '../../shared/theme/colors'
 import { AppText } from '../../shared/theme/typography'
+import { useNavigate } from 'react-router-dom'
 
 function DevicesContent() {
   const { data: devices, isLoading, isError, error } = useDevices()
   const isDesktop = useMediaQuery('(min-width: 768px)')
-  const [historyDeviceId, setHistoryDeviceId] = useState<number | null>(null)
-  const [historyDeviceName, setHistoryDeviceName] = useState<string | undefined>()
+  const navigate = useNavigate()
 
-  const handleViewHistory = (id: number, name?: string) => {
-    setHistoryDeviceId(id)
-    setHistoryDeviceName(name)
-  }
-
-  const handleCloseHistory = () => {
-    setHistoryDeviceId(null)
+  const handleViewHistory = (id: number) => {
+    // Redirige al detalle del dispositivo en vez de abrir un drawer.
+    navigate(`/devices/${id}`)
   }
 
   if (isLoading) {
@@ -64,13 +58,6 @@ function DevicesContent() {
       ) : (
         <DeviceCardList devices={devices} onViewHistory={handleViewHistory} />
       )}
-
-      <DeviceHistoryDrawer
-        deviceId={historyDeviceId}
-        deviceName={historyDeviceName}
-        isOpen={historyDeviceId !== null}
-        onClose={handleCloseHistory}
-      />
     </>
   )
 }
