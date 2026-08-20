@@ -50,9 +50,9 @@ function DeviceActionsRow({
                 <button
                   onClick={handleSave}
                   disabled={name.trim() === (device.friendlyName ?? '')}
-                  className={`rounded-md px-3 py-1 transition-all text-white font-medium ${AppText.caption} ${name.trim() !== (device.friendlyName ?? '')
-                    ? `${AppColors.buttonPrimaryBg} hover:brightness-110 shadow-sm`
-                    : 'bg-zinc-600/50 cursor-not-allowed opacity-50'
+                  className={`rounded-md px-3 py-1 transition-all font-medium ${AppText.caption} ${name.trim() !== (device.friendlyName ?? '')
+                    ? `${AppColors.buttonPrimaryBg} hover:brightness-110 shadow-sm ${AppColors.textOnPrimary}`
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     }`}
                 >
                   Guardar

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Habilitar modo oscuro por clase (.dark) en Tailwind v4 */
+@variant dark (&:is(.dark *));
+
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
