@@ -1,6 +1,7 @@
 package com.networkmonitor.api;
 
 import com.networkmonitor.dto.DeviceResponseDTO;
+import com.networkmonitor.dto.ScanEventResponseDTO;
 import com.networkmonitor.dto.UpdateFriendlyNameRequest;
 import com.networkmonitor.service.DeviceQueryService;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +45,16 @@ public class DeviceController {
                 .orElse(ResponseEntity.notFound().build());
 
     }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<ScanEventResponseDTO>> getDeviceHistory(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "50") int limit) {
+        return deviceQueryService.getDeviceHistory(id, limit)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
 
 }

@@ -2,7 +2,9 @@ package com.networkmonitor.mappers;
 
 import com.networkmonitor.dto.DeviceResponseDTO;
 import com.networkmonitor.dto.PortResponseDTO;
+import com.networkmonitor.dto.ScanEventResponseDTO;
 import com.networkmonitor.model.Device;
+import com.networkmonitor.model.ScanEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,5 +17,13 @@ public class DeviceMapper {
         return new DeviceResponseDTO(device.getId(), device.getIpAddress(), device.getMacAddress(),
                 device.getHostName(), device.getFriendlyName(), device.getVendor(), device.isKnown(),
                 device.isOnline(), device.getFirstSeen(), device.getLastSeen(), ports);
+    }
+
+    public ScanEventResponseDTO toDto(ScanEvent event) {
+        return new ScanEventResponseDTO(
+                event.getId(),
+                event.getTimestamp(),
+                event.isOnline()
+        );
     }
 }

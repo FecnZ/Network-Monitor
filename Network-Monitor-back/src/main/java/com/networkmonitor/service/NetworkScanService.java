@@ -1,8 +1,10 @@
 package com.networkmonitor.service;
 
 import com.networkmonitor.model.Device;
+import com.networkmonitor.model.ScanEvent;
 import com.networkmonitor.parser.NmapParser;
 import com.networkmonitor.repository.DeviceRepository;
+import com.networkmonitor.repository.ScanEventRepository;
 import com.networkmonitor.scanner.NetworkDiscoveryService;
 import com.networkmonitor.scanner.ScanResult;
 import com.networkmonitor.scanner.ScannerService;
@@ -14,9 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class NetworkScanService {
     private final ScannerService scannerService; // El que ejecuta Nmap
     private final NmapParser nmapParser;         // El que traduce el texto
     private final DeviceRepository deviceRepository; // El que guarda en H2
+    private final ScanEventRepository scanEventRepository;
 
     public boolean isScanInProgress(){
         return scanInProgress.get();
@@ -61,12 +64,12 @@ public class NetworkScanService {
             String subnet = resolveSubnet(subnetParam);
             log.info("--- Iniciando ciclo completo de escaneo para la red: {} ---", subnet);
 
-            // 1. Ejecutar Nmap (obtenemos texto crudo)
             ScanResult scanResult = scannerService.runFullScan(subnet);
-
-            // 2. Parsear el texto a objetos Java
             List<Device> parsedDevices = nmapParser.parseScan(scanResult);
             LocalDateTime scanTime = LocalDateTime.now();
+
+            List<Device> savedDevices = new ArrayList<>();
+            List<ScanEvent> scanEvents = new ArrayList<>();
 
             // 3. Lógica inteligente de Guardado (Upsert)
             for (Device parsedDevice : parsedDevices) {
@@ -83,6 +86,12 @@ public class NetworkScanService {
                 if (existingDeviceOpt.isPresent()) {
                     // ACTUALIZAR: El dispositivo ya existe
                     deviceToSave = existingDeviceOpt.get();
+
+                    if (!deviceToSave.isOnline()) {
+                        scanEvents.add(ScanEvent.builder()
+                                .device(deviceToSave).timestamp(scanTime).online(true).build());
+                    }
+
                     deviceToSave.setIpAddress(ip); // Actualizamos IP por si cambió por DHCP
                     deviceToSave.setLastSeen(scanTime);
                     deviceToSave.setOnline(true);
@@ -103,26 +112,36 @@ public class NetworkScanService {
                     deviceToSave.setLastSeen(scanTime);
                     deviceToSave.setOnline(true);
                     deviceToSave.getPorts().forEach(port -> port.setDevice(deviceToSave));
+                    scanEvents.add(ScanEvent.builder()
+                            .device(deviceToSave).timestamp(scanTime).online(true).build());
                     log.info("Registrando NUEVO dispositivo: {} ({})", ip, mac != null ? mac : "Sin MAC");
                 }
 
-                deviceRepository.save(deviceToSave);
+                savedDevices.add(deviceRepository.save(deviceToSave));
             }
 
-            markMissingDevicesOffline(parsedDevices);
+            List<Device> missingDevices = markMissingDevicesOffline(parsedDevices, scanTime, scanEvents);
 
-            log.info("--- Ciclo de escaneo finalizado con éxito ---");
+            if (!scanEvents.isEmpty()) {
+                scanEventRepository.saveAll(scanEvents);
+            }
+            log.info("--- Ciclo de escaneo finalizado con éxito ({} eventos nuevos registrados) ---",
+                    scanEvents.size());
         } finally {
             scanInProgress.set(false);
         }
 
     }
 
-    private void markMissingDevicesOffline(List<Device> parsedDevices) {
+    private List<Device> markMissingDevicesOffline(List<Device> parsedDevices, LocalDateTime scanTime, List<ScanEvent> scanEvents) {
         if (parsedDevices.isEmpty()) {
-            // Escaneo no encontró NINGÚN host activo -> probablemente red caída
-            deviceRepository.findByOnlineTrue().forEach(d -> d.setOnline(false));
-            return;
+            List<Device> allOnline = deviceRepository.findByOnlineTrue();
+            for (Device d : allOnline) {
+                d.setOnline(false);
+                scanEvents.add(ScanEvent.builder().device(d).timestamp(scanTime).online(false).build());
+            }
+            deviceRepository.saveAll(allOnline);
+            return allOnline;
         }
 
         List<String> detectedMacs = parsedDevices.stream()
@@ -144,10 +163,14 @@ public class NetworkScanService {
                 })
                 .toList();
 
-        if (missingDevices.isEmpty()) return;
+        for (Device d : missingDevices) {
+            d.setOnline(false);
+            // REGISTRAMOS EL EVENTO DE DESCONEXIÓN
+            scanEvents.add(ScanEvent.builder().device(d).timestamp(scanTime).online(false).build());
+        }
 
-        missingDevices.forEach(d -> d.setOnline(false));
         deviceRepository.saveAll(missingDevices);
         log.info("Se marcaron {} dispositivos como offline.", missingDevices.size());
+        return missingDevices;
     }
 }
