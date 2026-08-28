@@ -18,3 +18,9 @@ export interface Device {
   lastSeen: string
   ports: Port[]
 }
+
+export interface DeviceHistoryEntry {
+  id: number
+  timestamp: string
+  online: boolean
+}
