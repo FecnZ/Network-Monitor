@@ -46,6 +46,8 @@ public class DeviceQueryService {
         });
     }
 
+    
+
     public Optional<List<ScanEventResponseDTO>> getDeviceHistory(Long deviceId, int limit) {
         if (!deviceRepository.existsById(deviceId)) {
             return Optional.empty();

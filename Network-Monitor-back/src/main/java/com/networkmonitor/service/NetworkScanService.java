@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +33,7 @@ public class NetworkScanService {
     private final NmapParser nmapParser;         // El que traduce el texto
     private final DeviceRepository deviceRepository; // El que guarda en H2
     private final ScanEventRepository scanEventRepository;
+    private final AlertService alertService;
 
     public boolean isScanInProgress(){
         return scanInProgress.get();
@@ -116,8 +116,12 @@ public class NetworkScanService {
                             .device(deviceToSave).timestamp(scanTime).online(true).build());
                     log.info("Registrando NUEVO dispositivo: {} ({})", ip, mac != null ? mac : "Sin MAC");
                 }
+                Device saved = deviceRepository.save(deviceToSave);
+                savedDevices.add(saved);
 
-                savedDevices.add(deviceRepository.save(deviceToSave));
+                if (existingDeviceOpt.isEmpty()) {
+                    alertService.evaluate(saved, true);
+                }
             }
 
             List<Device> missingDevices = markMissingDevicesOffline(parsedDevices, scanTime, scanEvents);
