@@ -46,14 +46,7 @@ public class NmapParser {
             String ip = host.getIpAddress();
             if (ip == null) continue;
 
-            Device device = new Device();
-            device.setIpAddress(ip);
-            device.setHostName(host.getHostname() != null ? host.getHostname() : "Unknown");
-            device.setFirstSeen(LocalDateTime.now());
-            device.setLastSeen(LocalDateTime.now());
-            device.setOnline(true);
-            device.setKnown(false);
-            device.setPorts(new ArrayList<>());
+            Device device = newBareDevice(ip, host.getHostname());
 
             NmapAddress mac = host.getMacAddress();
             if (mac != null) {
@@ -79,31 +72,58 @@ public class NmapParser {
             String ip = host.getIpAddress();
             if (ip == null) continue;
 
-            Device device = devicesByIp.computeIfAbsent(ip, k -> {
-                Device d = new Device();
-                d.setIpAddress(ip);
-                d.setHostName("Unknown");
-                d.setFirstSeen(LocalDateTime.now());
-                d.setLastSeen(LocalDateTime.now());
-                d.setOnline(true);
-                d.setKnown(false);
-                d.setPorts(new ArrayList<>());
-                return d;
+            Device device = devicesByIp.computeIfAbsent(ip, k -> newBareDevice(ip, null));
+
+            buildPorts(host).forEach(port -> {
+                port.setDevice(device);
+                device.getPorts().add(port);
             });
+        }
+    }
 
-            if (host.getPorts() == null || host.getPorts().getPortList() == null) continue;
+    /**
+     * Usado por el escaneo dirigido (Fase 2 sola, sin Fase 1): solo extrae puertos por IP,
+     * sin crear identidad de dispositivo (ya se conoce de antes en BD).
+     */
+    public Map<String, List<Port>> parsePortsOnly(String phase2Xml) {
+        Map<String, List<Port>> portsByIp = new LinkedHashMap<>();
+        List<NmapHost> hosts = parseHosts(phase2Xml);
 
-            host.getPorts().getPortList().forEach(nmapPort -> {
-                Port port = Port.builder()
+        for (NmapHost host : hosts) {
+            String ip = host.getIpAddress();
+            if (ip == null) continue;
+            portsByIp.put(ip, buildPorts(host));
+        }
+        return portsByIp;
+    }
+
+    /**
+     * Construye la lista de Port a partir de los puertos reportados por Nmap para un host.
+     * Sin asociar Device todavía (se hace en el punto de uso).
+     */
+    private List<Port> buildPorts(NmapHost host) {
+        if (host.getPorts() == null || host.getPorts().getPortList() == null) return List.of();
+
+        return host.getPorts().getPortList().stream()
+                .map(nmapPort -> Port.builder()
                         .portNumber(nmapPort.getPortid())
                         .protocol(nmapPort.getProtocol().toUpperCase())
                         .state(nmapPort.getState() != null ? nmapPort.getState().getState() : "unknown")
                         .service(nmapPort.getService() != null ? nmapPort.getService().getName() : "unknown")
-                        .device(device)
-                        .build();
-                device.getPorts().add(port);
-            });
-        }
+                        .build())
+                .toList();
+    }
+
+    private Device newBareDevice(String ip, String hostname) {
+        Device d = new Device();
+        d.setIpAddress(ip);
+        d.setHostName(hostname != null ? hostname : "Unknown");
+        d.setFirstSeen(LocalDateTime.now());
+        d.setLastSeen(LocalDateTime.now());
+        d.setOnline(true);
+        d.setKnown(false);
+        d.setPorts(new ArrayList<>());
+        return d;
     }
 
     private List<NmapHost> parseHosts(String xmlContent) {

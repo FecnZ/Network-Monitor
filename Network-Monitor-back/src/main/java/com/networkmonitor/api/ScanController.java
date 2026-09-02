@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,5 +39,17 @@ public class ScanController {
     @GetMapping("/status")
     public ResponseEntity<Map<String, Boolean>> getScanStatus() {
         return ResponseEntity.ok(Map.of("inProgress", networkScanService.isScanInProgress()));
+    }
+
+    @PostMapping("/discovery")
+    public ResponseEntity<Void> triggerDiscoveryScan(@RequestParam(required = false) String subnet) {
+        networkScanService.executeDiscoveryScan(subnet);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/scan/ports")
+    public ResponseEntity<Void> triggerTargetedScan(@RequestParam List<Long> deviceIds) {
+        networkScanService.executeTargetedScan(deviceIds);
+        return ResponseEntity.accepted().build();
     }
 }

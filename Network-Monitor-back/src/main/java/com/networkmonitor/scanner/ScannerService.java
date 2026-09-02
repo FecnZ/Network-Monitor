@@ -33,6 +33,19 @@ public class ScannerService {
 
     private final XmlMapper xmlMapper;
 
+    public String runDiscoveryScan(String subnet) {
+        validateSubnet(subnet);
+
+        Path phase1Xml = createTempXmlFile("nmap-discovery");
+        try {
+            log.info("Escaneo rápido (solo descubrimiento) en {}", subnet);
+            executeCommand("nmap", "--privileged", "-sn", "-oX", phase1Xml.toString(), subnet);
+            return readAndDelete(phase1Xml);
+        } finally {
+            deleteIfExists(phase1Xml);
+        }
+    }
+
     public ScanResult runFullScan(String subnet) {
         validateSubnet(subnet);
 
@@ -66,6 +79,28 @@ public class ScannerService {
         } finally {
             deleteIfExists(phase1Xml);
             deleteIfExists(phase2Xml);
+        }
+    }
+
+    public String runTargetedPortScan(List<String> ips) {
+        if (ips.isEmpty()) {
+            throw new IllegalArgumentException("Se requiere al menos una IP para el escaneo dirigido.");
+        }
+        ips.forEach(this::validateSubnet); // reutiliza el mismo regex, valida cada IP individual
+
+        Path targetXml = createTempXmlFile("nmap-targeted");
+        try {
+            List<String> command = new ArrayList<>(Arrays.asList(
+                    "nmap", "--privileged", timingTemplate, "-Pn", "--send-ip",
+                    "--host-timeout", hostTimeout, "-sV",
+                    "-oX", targetXml.toString()));
+            command.addAll(ips);
+
+            log.info("Escaneo dirigido de puertos para: {}", ips);
+            executeCommand(command.toArray(new String[0]));
+            return readAndDelete(targetXml);
+        } finally {
+            deleteIfExists(targetXml);
         }
     }
 
