@@ -18,7 +18,7 @@ public class ScanScheduler {
     public void scheduledScan() {
         log.info("=== Escaneo automático disparado por scheduler ===");
         try {
-            networkScanService.executeFullScan(null);
+            networkScanService.executeDiscoveryScan(null);
         } catch (Exception e) {
             log.error("El escaneo automático falló: ", e);
         }

@@ -1,6 +1,7 @@
 package com.networkmonitor.api;
 
 import com.networkmonitor.dto.DeviceResponseDTO;
+import com.networkmonitor.dto.PortResponseDTO;
 import com.networkmonitor.dto.ScanEventResponseDTO;
 import com.networkmonitor.dto.UpdateFriendlyNameRequest;
 import com.networkmonitor.service.DeviceQueryService;
@@ -55,6 +56,12 @@ public class DeviceController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/ports")
+    public ResponseEntity<List<PortResponseDTO>> getPortsByDevice(@PathVariable Long id) {
+        return deviceQueryService.getPortsByDeviceId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
 
 }

@@ -31,7 +31,10 @@ public class Device {
     private String hostName;
     private String vendor;
     private String friendlyName;
+    
+    @Column(nullable = false)
     private boolean known;
+
     private LocalDateTime firstSeen;
     private LocalDateTime lastSeen;
     private boolean online;

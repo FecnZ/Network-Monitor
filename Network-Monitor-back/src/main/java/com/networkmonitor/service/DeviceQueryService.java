@@ -1,9 +1,12 @@
 package com.networkmonitor.service;
 
 import com.networkmonitor.dto.DeviceResponseDTO;
+import com.networkmonitor.dto.PortResponseDTO;
 import com.networkmonitor.dto.ScanEventResponseDTO;
 import com.networkmonitor.mappers.DeviceMapper;
+import com.networkmonitor.model.Port;
 import com.networkmonitor.repository.DeviceRepository;
+import com.networkmonitor.repository.PortRepository;
 import com.networkmonitor.repository.ScanEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +24,7 @@ public class DeviceQueryService {
     private final DeviceRepository deviceRepository;
     private final DeviceMapper deviceMapper;
     private final ScanEventRepository scanEventRepository;
+    private final PortRepository portRepository;
 
     public List<DeviceResponseDTO> getAllDevices() {
         return deviceRepository.findAll().stream()
@@ -58,6 +62,14 @@ public class DeviceQueryService {
                 .toList();
 
         return Optional.of(history);
+    }
+
+    public Optional<List<PortResponseDTO>> getPortsByDeviceId(Long deviceId) {
+        if (!deviceRepository.existsById(deviceId)) {
+            return Optional.empty();
+        }
+        List<Port> ports = portRepository.findByDevice_Id(deviceId);
+        return Optional.of(deviceMapper.toPortDtoList(ports));
     }
 
 }
