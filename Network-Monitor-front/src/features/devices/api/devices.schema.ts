@@ -30,3 +30,15 @@ export function parseDevices(data: unknown) {
 export function parseDevice(data: unknown) {
   return DeviceSchema.parse(data)
 }
+
+const DeviceHistorySchema = z.object({
+  id: z.number(),
+  timestamp: z.string(),
+  online: z.boolean(),
+})
+
+const DeviceHistoryListSchema = z.array(DeviceHistorySchema)
+
+export function parseDeviceHistory(data: unknown) {
+  return DeviceHistoryListSchema.parse(data)
+}
